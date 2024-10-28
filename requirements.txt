@@ -2,4 +2,4 @@ openai==0.27.8
 streamlit==1.25.0
 langchain==0.0.304
 chromadb==0.4.10
-tiktoken==0.4.0
+tiktoken==0.3.3
