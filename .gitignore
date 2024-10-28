@@ -9,9 +9,11 @@
 # 모든 .py 파일 무시
 *.py
 *.md
+*.txt
 
 # app_streamlit_cloud.py는 예외로 포함
 !app_streamlit_cloud.py
+!requirements.txt
 
 
 # __pycache__ 폴더 무시 (Python 캐시 파일)
