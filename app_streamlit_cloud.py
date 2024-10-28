@@ -49,7 +49,7 @@ if not openai_api_key:
 session_lock = Lock()
 
 # 벡터스토어 경로 설정
-VECTORSTORE_PATH = Path("chroma_vectorstore")
+VECTORSTORE_PATH = Path("./chroma_vectorstore")
 
 # 채팅 프롬프트 정의
 chat_prompt = ChatPromptTemplate.from_messages([
