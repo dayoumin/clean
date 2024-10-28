@@ -34,13 +34,14 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 # OpenAI API 키 설정
 
-# load_dotenv() 대신 st.secrets 사용
-# requirements.txt도 dotenv 제거
-# openai_api_key = os.getenv("OPENAI_API_KEY")
-""" streamlit secrets 사용 
-    load_dotenv() 대신 st.secrets 사용
-"""
-openai_api_key = st.secrets["OPENAI_API_KEY"]
+try:
+    openai_api_key = st.secrets["OPENAI_API_KEY"]
+except Exception:
+    from dotenv import load_dotenv
+    load_dotenv()  # .env 파일 로드
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+
+# API 키가 설정되지 않았을 때의 에러 처리
 if not openai_api_key:
     st.error("OPENAI_API_KEY가 설정되지 않았습니다.")
     st.stop()
