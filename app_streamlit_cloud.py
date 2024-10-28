@@ -3,7 +3,7 @@ import logging
 import warnings
 from pathlib import Path
 from threading import Lock
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import streamlit as st
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
