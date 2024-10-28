@@ -1,5 +1,10 @@
 openai==0.27.8
 streamlit==1.25.0
-langchain==0.0.296
-chromadb==0.3.25
+langchain==0.0.294  # 안정된 이전 버전 사용
+chromadb==0.3.21    # 호환되는 버전 사용
 tiktoken==0.4.0
+
+# 추가 의존성
+typing-extensions>=4.5.0
+duckdb>=0.7.1
+sqlalchemy>=1.4  # Chroma가 의존하는 경우가 있음
