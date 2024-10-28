@@ -3,7 +3,6 @@ import logging
 import warnings
 from pathlib import Path
 from threading import Lock
-from dotenv import load_dotenv
 import streamlit as st
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
@@ -35,7 +34,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 # OpenAI API 키 설정
 
 load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY")
+openai_api_key = st.secrets["OPENAI_API_KEY"]
 if not openai_api_key:
     st.error("OPENAI_API_KEY가 설정되지 않았습니다.")
     st.stop()
