@@ -1,7 +1,5 @@
 openai==0.27.8
 streamlit==1.25.0
-langchain-core>=0.1.46,<0.3.0 # 호환 가능한 낮은 버전 사용
-langchain-openai==0.1.5  # 요구되는 버전 범위에 맞춤
-langchain-upstage==0.1.7
-tiktoken==0.8.0
-chromadb==0.4.10
+langchain==0.0.296
+chromadb==0.3.25
+tiktoken==0.4.0
