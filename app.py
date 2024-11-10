@@ -50,7 +50,6 @@ CONFIG = {
     }
 }
 
-
 # =========================
 # 2. 로깅 설정
 # =========================
@@ -208,7 +207,6 @@ def initialize_vectorstore(embedding_model):
     st.session_state['vectorstore'] = vectorstore
     return vectorstore, HASH_FILE_PATH
 
-
 def create_new_vectorstore(embeddings):
     embedding_size = CONFIG["embedding_size"]  # CONFIG에서 임베딩 크기 가져오기
     index = faiss.IndexFlatL2(embedding_size)
@@ -218,7 +216,6 @@ def create_new_vectorstore(embeddings):
         docstore=InMemoryDocstore({}),
         index_to_docstore_id={}
     )
-    return vectorstore
     return vectorstore
 
 # =========================
@@ -262,7 +259,6 @@ def reset_vectorstore():
     except Exception as e:
         logger.error(f"벡터스토어 리셋 중 오류 발생: {e}")
         return False
-
 
 # =========================
 # 8. 초기 로드 시 모든 파일 처리 함수
@@ -374,7 +370,7 @@ def initial_load(vectorstore):
                 - 총 문서 수: {len(docs)}개
                 - 총 청크 수: {len(splits)}개
                 """)
-    
+
     logger.info("=== 벡터스토어 초기 로드 종료 ===")
 
 # =========================
@@ -524,33 +520,40 @@ def log_document_tokens(docs):
 # =========================
 
 chat_prompt = ChatPromptTemplate.from_messages([
-    (
-        "system",
-        """당신은 한국의 최고 법률 전문가입니다. 다음 지침을 반드시 준수하여 답변하세요:
+     (
+      "system",
+         """당신은 한국의 최고 법률 전문가입니다. 다음 지침을 반드시 준수하여 답변하세요:
 
-        1. [필수] 답변은 다음 내용을 포함하되, 자연스러운 문장으로 작성하세요:
-           - 질문에 대한 직접적인 답변
-           - 관련 법적 개념 설명
-           - 구체적인 법적 근거와 해석
-           - 적용 가능한 조항 설명
+        1. [중요] 먼저 질문의 내용이 인삿말인지 법률적인 질문인지 판단하세요. 법률적인 질문이 아닌 경우 짧게 답변하세요. 
+        법률적인 질문인 경우 2~7번 절차에 따라 답변을 하세요.
 
-        2. 참고 법령을 명시할때는 문서의 제목에 있는 법령을 명시하세요.              
-        
-        3. [형식] 답변 마지막에는 다음 두 가지를 추가하세요:
-           ⚖️ 결론: 핵심 내용을 간단히 정리
-           📌 참고 법령: 인용된 법령 목록
-        
+        2. [필수] 답변은 다음 내용을 포함하되, 자연스러운 문장으로 작성하세요:
+        - 질문에 대한 직접적인 답변
+        - 관련 법적 개념 설명
+        - 구체적인 법적 근거와 해석
+        - 적용 가능한 조항 설명
+
+        3. 참고 법령을 명시할때는 문서의 제목에 있는 법령과 조항을 명시하세요.         
+
+        4. [중요] 제공된 문서에 같은 내용이 여러 문서에 언급된 경우, 법적 효력에 따라 다음 순서로 우선순위를 두고 답변하세요:
+        - 법률
+        - 시행령
+        - 업무편람 등 비법령 자료
+        * 여러 문서에서 관련 규정이 발견될 경우, 법적 효력이 높은 문서를 우선으로 인용하고, 필요 시 다른 자료는 보충 설명에 활용하세요.             
+
+        5. [형식] 법률적인 질문에 대한 답변 마지막에는 다음 두 가지를 추가하세요:
+        ⚖️ 결론: 핵심 내용을 간단히 정리
+        📌 참고 법령: 인용된 법령 목록
+
         6. 답변이 불확실한 경우 "제공된 문서에서 해당 내용을 찾을 수 없습니다."라고 
-           명시하세요.
-        
+        명시하세요.
+
         7. [참고] 모든 조항 인용 시 "「법률명」 제X조 제X항"과 같이 정확한 출처를 
-           표시하세요.
-        """
+        표시하세요.
+                """
     ),
     ("user", "{chat_history}\n\n[제공된 문서]\n{context}\n\n[질문]\n{question}")
 ])
-
-
 
 # =========================
 # 12. 커스텀 콜백 핸들러 정의
@@ -564,7 +567,7 @@ class StreamlitCallbackHandler(BaseCallbackHandler):
         self.answer_text = ""
 
     def on_llm_new_token(self, token: str, **kwargs):
-        """새로운 큰이 생성될 때마다 호출됩니다."""
+        """새로운 토큰이 생성될 때마다 호출됩니다."""
         skip_patterns = ["Human:", "Assistant:", "질문: ", "답변: "]
         if any(pattern in token for pattern in skip_patterns):
             return
@@ -577,12 +580,61 @@ class StreamlitCallbackHandler(BaseCallbackHandler):
         final_answer = self.answer_text.strip()
         self.message_placeholder.markdown(final_answer)
 
+# =========================
+# 12-1. qa_chain 초기화 함수 추가
+# =========================
+
+def initialize_qa_chain(vectorstore):
+    """QA Chain을 초기화하고 세션 상태에 저장"""
+    if 'qa_chain' not in st.session_state or st.session_state['qa_chain'] is None:
+        # 초기화 시 단일 콜백 핸들러 생성
+        message_placeholder = st.empty()
+        callback_handler = StreamlitCallbackHandler(message_placeholder)
+        callback_manager = CallbackManager([callback_handler])
+
+        llm = ChatOpenAI(
+            model_name=CONFIG["model_name"],
+            temperature=0,
+            streaming=True,
+            openai_api_key=CONFIG["api_keys"]["openai"],
+            callback_manager=callback_manager
+        )
+
+        qa_chain = ConversationalRetrievalChain.from_llm(
+            llm=llm,
+            retriever=vectorstore.as_retriever(search_kwargs={"k": 5}),
+            memory=st.session_state['memory'],
+            return_source_documents=True,
+            chain_type="stuff",
+            combine_docs_chain_kwargs={
+                "prompt": chat_prompt,
+                "document_variable_name": "context",
+            },
+            verbose=False,
+            output_key='answer'
+        )
+        st.session_state['qa_chain'] = qa_chain
+        st.session_state['callback_handler'] = callback_handler  # 현재 핸들러 저장
+
+    return st.session_state['qa_chain'], st.session_state['callback_handler']
 
 # =========================
 # 13. 메인 함수 정의
 # =========================
 
 def main():
+    # ====================
+    # 1. 세션 상태 초기화
+    # ====================
+    if 'generated' not in st.session_state:
+        st.session_state['generated'] = []
+    if 'past' not in st.session_state:
+        st.session_state['past'] = []
+    if 'qa_chain' not in st.session_state:
+        st.session_state['qa_chain'] = None
+    if 'callback_handler' not in st.session_state:
+        st.session_state['callback_handler'] = None
+
     # 벡터스토어와 해시 파일, 메모리 초기화
     vectorstore, hash_file_path = initialize_vectorstore_and_memory()
 
@@ -627,27 +679,25 @@ def main():
         st.subheader("📊 문서 통계")
         document_hashes = load_document_hashes(hash_file_path)
         if document_hashes:
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             with col1:
                 st.metric("총 문서 수", f"{len(document_hashes)}개")
             with col2:
                 total_pages = sum(doc_info.get('pages', 0) for doc_info in document_hashes.values())
                 st.metric("총 페이지 수", f"{total_pages}개")
-            
-            total_chunks = sum(doc_info.get('total_chunks', 0) for doc_info in document_hashes.values())
-            st.metric("총 청크 수", f"{total_chunks}개")
+            with col3:
+                total_chunks = sum(doc_info.get('total_chunks', 0) for doc_info in document_hashes.values())
+                st.metric("총 청크 수", f"{total_chunks}개")
 
     st.markdown("<h3 style='text-align: center;'>💬 청렴법률 상담챗봇</h3>", unsafe_allow_html=True)
-
-    if 'generated' not in st.session_state:
-        st.session_state['generated'] = []
-    if 'past' not in st.session_state:
-        st.session_state['past'] = []
 
     # 과거 대화 표시
     for i in range(len(st.session_state['generated'])):
         st.chat_message("user").markdown(st.session_state['past'][i])
         st.chat_message("assistant").markdown(st.session_state['generated'][i])
+
+    # QA Chain 초기화 (한 번만 실행됨) 및 콜백 핸들러 가져오기
+    qa_chain, callback_handler = initialize_qa_chain(vectorstore)
 
     # 사용자 입력 처리
     if question := st.chat_input("법률 관련 질문을 입력하세요"):
@@ -657,67 +707,38 @@ def main():
         try:
             # 질문과 관련된 문서 검색
             retrieved_docs = vectorstore.similarity_search(question, k=5)
-            log_document_tokens(retrieved_docs)  # 문서 토큰 수 로그 기록
+            log_document_tokens(retrieved_docs)
 
             logger.info("\n=== 질문 처리 시작 ===")
             logger.info(f"질문: {question}")
             logger.info(f"검색된 문서 수: {len(retrieved_docs)}개")
 
-            # 각 문서의 출처 정보와 내용 포함하여 context 생성
+            # context 생성 코드
             context = ""
             for i, doc in enumerate(retrieved_docs, 1):
-                law_name = doc.metadata.get("law_name", "출처 정보 없음")  # 문서 출처 정보
+                sources = doc.metadata.get("law_name", "출처 정보 없음")
                 page = doc.metadata.get("page", "페이지 정보 없음")
-                content = doc.page_content  # 문서 내용
-                
-                # context에 제목과 내용을 포함
-                context += f"\n\n 📜관련법령 {i}] {law_name}, \n📄 페이지 {page}: \n💡 내용:\n{content}\n"
-
+                context += f"\n\n 📜관련법령 {i}] {sources}, \n📄 페이지 {page}: \n💡 내용:\n{doc.page_content}\n"
+                        
                 logger.info(f"\n[문서 {i}]")
                 logger.info(f"[입력 전체 정보 {context}]")
-                logger.info(f"출처: {law_name}")
-                logger.info(f"페이지: {page}")
-                logger.info(f"내용 요약: {content[:200]}...")
+                logger.info(f"출처: {doc.metadata.get('law_name', '알 수 없음')}")
+                logger.info(f"페이지: {doc.metadata.get('page', '알 수 없음')}")
+                logger.info(f"내용 요약: {doc.page_content[:200]}...")
 
             logger.info("=== 검색 결과 종료 ===\n")
             
-            # 콜백 핸들러 설정
-            message_placeholder = st.empty()
-            callback_handler = StreamlitCallbackHandler(message_placeholder)
-            callback_manager = CallbackManager([callback_handler])
-
-            # LLM 초기화
-            llm = ChatOpenAI(
-                model_name=CONFIG["model_name"],  # CONFIG에서 모델명 사용
-                temperature=0,
-                streaming=True,
-                openai_api_key=CONFIG["api_keys"]["openai"],
-                callback_manager=callback_manager
-            )
-
-            # QA 체인 생성
-            qa_chain = ConversationalRetrievalChain.from_llm(
-                llm=llm,
-                retriever=vectorstore.as_retriever(search_kwargs={"k": 5}),
-                memory=st.session_state['memory'],
-                return_source_documents=True,
-                chain_type="stuff",
-                combine_docs_chain_kwargs={
-                    "prompt": chat_prompt,
-                    "document_variable_name": "context",
-                },
-                verbose=False,
-                output_key='answer'                
-            )
+            # 콜백 핸들러의 message_placeholder 업데이트
+            callback_handler.message_placeholder = st.empty()
+            callback_handler.answer_text = ""  # 이전 응답 초기화
 
             # 질문에 대한 응답 생성
-            response = qa_chain({
-                "question": question,                
-            })
+            response = qa_chain({"question": question})
+            source_docs = response.get('source_documents', [])
             
             # 생성된 답변을 세션에 저장
             st.session_state['generated'].append(callback_handler.answer_text)
-            logger.info("=== 문 처리 완료 ===\n")
+            logger.info("=== 질문 처리 완료 ===\n")
 
         except Exception as e:
             logger.error(f"질문 처리 중 오류 발생 - {question}: {str(e)}")
@@ -731,4 +752,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
