@@ -26,12 +26,6 @@ from langchain.callbacks.base import BaseCallbackHandler
 from langchain.docstore.document import Document
 
 
-# Heroku에서 포트를 가져옵니다.
-port = int(os.environ.get("PORT", 8501))
-
-# Streamlit 앱 실행
-st.run(port=port)
-
 # =========================
 # 1. CONFIG 딕셔너리 정의
 # =========================
