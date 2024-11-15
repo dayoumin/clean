@@ -1,1 +1,1 @@
-web: python app_server_ChatUI.py
+web: streamlit run app_server_ChatUI.py
