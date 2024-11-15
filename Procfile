@@ -1,1 +1,1 @@
-web: streamlit run app_server_ChatUI.py
+   web: streamlit run app_server_ChatUI.py --server.port $PORT --server.address 0.0.0.0

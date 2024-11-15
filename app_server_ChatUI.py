@@ -25,6 +25,13 @@ from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain.docstore.document import Document
 
+
+# Heroku에서 포트를 가져옵니다.
+port = int(os.environ.get("PORT", 8501))
+
+# Streamlit 앱 실행
+st.run(port=port)
+
 # =========================
 # 1. CONFIG 딕셔너리 정의
 # =========================
@@ -69,7 +76,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 load_dotenv()
 
-CONFIG["api_keys"]["openai"] = os.getenv("OPENAI_API_KEY") or st.secrets.get("OPENAI_API_KEY")
+CONFIG["api_keys"]["openai"] = os.getenv("OPENAI_API_KEY")
 
 if not CONFIG["api_keys"]["openai"]:
     logger.error("OpenAI API 키가 설정되지 않았습니다.")
