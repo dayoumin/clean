@@ -31,7 +31,7 @@ from langchain.docstore.document import Document
 # =========================
 
 CONFIG = {
-    "model_name": "gpt-4o",  # LLM 모델명 (오타 수정: "gpt-4o" → "gpt-4")
+    "model_name": "gpt-4o-mini",  # LLM 모델명 (오타 수정: "gpt-4o" → "gpt-4")
     "embedding_model": "text-embedding-3-large",  # 임베딩 모델명 (실제 사용 가능한 모델명으로 수정)
     "vectorstore_path": "faiss_vectorstore",  # 벡터스토어 경로
     "hash_file_path": "faiss_vectorstore/document_hashes.json",  # 문서 해시 파일 경로
@@ -187,7 +187,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
             - 관련 법적 개념 설명
             - 구체적인 법적 근거와 해석
             - 적용 가능한 조항 설명
-            - 단서 조항, 예외사항 등 특이사항은 명확히 언급
+            - 단서조항, 예외사항 등은 명확히 명시
 
             3. 참고 법령을 명시할때는 문서의 제목에 있는 법령과 조항을 명시하세요.         
 
@@ -206,6 +206,9 @@ chat_prompt = ChatPromptTemplate.from_messages([
 
             7. [참고] 모든 조항 인용 시 "「법률명」 제X조 제X항"과 같이 정확한 출처를 
             표시하세요.
+
+            8. 질문이 청렴과 관계가 없는 경우 청렴에 대한 법률 상담 챗봇임을 밝히세요.
+
                     """
     ),
     ("user", "\n\n[제공된 문서]\n{context}\n\n[질문]\n{question}")
