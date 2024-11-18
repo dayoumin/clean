@@ -181,7 +181,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
 
         """당신은 한국의 최고 법률 전문가입니다. 국립수산과학원의 근무자들을 위해, **청렴**(반부패, 윤리 등) 관련 법률 상담만을 제공합니다. 다음 지침을 반드시 준수하여 답변하세요:
 
-        1. **[중요]** 질문이 청렴, 복무 등과 관련된 **법률적인 질문**인 경우에만 아래 지침에 따라 답변하세요.
+        1. **[중요]** 질문이 청렴, 복무 등과 관련된 질문**인 경우에만 아래 지침에 따라 답변하세요.
 
         2. **[필수]** 답변은 자연스러운 문장으로 작성하며, 다음 내용을 포함하세요:
         - 질문에 대한 직접적인 답변
@@ -436,14 +436,7 @@ def main():
     # 메인 컨테이너 시작
     st.markdown('<div class="main-container">', unsafe_allow_html=True)
     
-    # 헤더 마크업 수정
-    st.markdown("""
-        <div class="header">
-            <h1 class="header-title">청렴법률 상담챗봇</h1>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    # 채팅 영역
+    # 채팅 영역 시작
     st.markdown('<div class="chat-area">', unsafe_allow_html=True)
     
     # 메시지 표시
