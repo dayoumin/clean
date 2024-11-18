@@ -207,6 +207,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
 
         7. **[질문 분류]** 질문이 청렴과 관련된 법률적인 질문이 아닌 경우, 다음과 같이 답변하세요:
         - **청렴과 관련된 일반적인 질문인 경우**: "죄송하지만, 본 챗봇은 청렴 관련 법률 상담에만 답변드립니다."
+        - **인사말 등 small talk은 **답변하지만, 짧게 인사말만 하고 "본 챗봇은 청렴 관련 법률 상담에만 답변드립니다."라고 하세요.
         - **청렴과 무관한 질문인 경우**: "죄송하지만, 본 챗봇은 청렴 관련 법률 상담을 위한 챗봇입니다."
 
         8. **[출처 표기]** 모든 조항 인용 시 "「법률명」 제X조 제X항"과 같이 정확한 출처를 표시하세요.
@@ -226,7 +227,7 @@ from datetime import datetime
 
 # 페이지 설정
 st.set_page_config(
-    page_title="청렴법률 상담챗봇",
+    page_title="",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -264,6 +265,8 @@ st.markdown(f"""
     /* 전체 배경색 설정 */
     .stApp {{
         background-color: {bg_color};
+        max-width: 100vw;
+        overflow-x: hidden;
     }}
     
     /* 상단 헤더 스타일 */
@@ -272,42 +275,50 @@ st.markdown(f"""
         top: 0;
         left: 0;
         right: 0;
-        height: 60px;
+        height: 50px;
         background: {header_bg};
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         z-index: 1000;
     }}
     
     .header-title {{
-        font-size: 1.2rem;
+        font-size: 1rem;
         color: {text_color};
         font-weight: 500;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
     }}
     
     /* 채팅 컨테이너 스타일 */
     .stChatFloatingInputContainer {{
-        padding: 1rem;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 8px;
         background: {input_bg};
         border-top: 1px solid rgba(0,0,0,0.1);
+        z-index: 999;
     }}
     
     /* 메시지 컨테이너 스타일 */
     .stChatMessageContent {{
-        padding: 0.8rem 1rem;
-        border-radius: 12px;
-        max-width: 80%;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        padding: 10px 12px;
+        border-radius: 18px;
+        max-width: 85%;
+        margin: 4px 8px;
+        font-size: 0.95rem;
+        word-break: break-word;
     }}
     
     /* 사용자 메시지 스타일 */
     [data-testid="StChatMessage"][data-testid="user"] {{
         justify-content: flex-end;
+        padding-left: 10%;
     }}
     
     [data-testid="StChatMessage"][data-testid="user"] .stChatMessageContent {{
@@ -318,19 +329,27 @@ st.markdown(f"""
     }}
     
     /* 어시스턴트 메시지 스타일 */
+    [data-testid="StChatMessage"]:not([data-testid="user"]) {{
+        padding-right: 10%;
+    }}
+
     [data-testid="StChatMessage"]:not([data-testid="user"]) .stChatMessageContent {{
         background: {assistant_msg_bg};
         color: {text_color};
         border-bottom-left-radius: 4px;
+        margin-right: auto;
     }}
     
     /* 어시스턴트 아이콘 스타일 */
     [data-testid="StChatMessage"]:not([data-testid="user"]) .stChatMessageAvatar {{
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23{text_color.replace("#", "")}" width="24" height="24"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.7L20 9v6l-8 4-8-4V9l8-4.3z"/></svg>');
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666666"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>');
         background-size: 65%;
         background-position: center;
         background-repeat: no-repeat;
         background-color: transparent;
+        width: 28px;
+        height: 28px;
+        margin-right: 6px;
     }}
     
     /* 사용자 아이콘 숨기기 */
@@ -340,20 +359,25 @@ st.markdown(f"""
     
     /* 채팅 입력창 스타일 */
     .stChatInputContainer {{
-        padding: 0.5rem;
         background: {input_bg};
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-radius: 20px;
+        margin: 0 8px;
+        padding: 6px 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }}
     
     textarea {{
         border: none !important;
         background: transparent !important;
+        padding: 8px !important;
+        font-size: 0.95rem !important;
+        line-height: 1.4 !important;
+        max-height: 100px !important;
     }}
     
     /* 스크롤바 스타일 */
     ::-webkit-scrollbar {{
-        width: 6px;
+        width: 4px;
     }}
     
     ::-webkit-scrollbar-track {{
@@ -362,13 +386,36 @@ st.markdown(f"""
     
     ::-webkit-scrollbar-thumb {{
         background: rgba(0,0,0,0.2);
-        border-radius: 3px;
+        border-radius: 2px;
     }}
     
     /* 채팅 영역 여백 조정 */
     .main .block-container {{
-        padding-top: 80px;
-        padding-bottom: 100px;
+        padding-top: 60px;
+        padding-bottom: 80px;
+        padding-left: 0;
+        padding-right: 0;
+    }}
+
+    /* 모바일 최적화 */
+    @media (max-width: 768px) {{
+        .stChatMessageContent {{
+            max-width: 90%;
+            font-size: 0.9rem;
+            padding: 8px 12px;
+        }}
+        
+        .header-title {{
+            font-size: 0.95rem;
+        }}
+        
+        .stChatInputContainer {{
+            margin: 0 4px;
+        }}
+        
+        textarea {{
+            font-size: 0.9rem !important;
+        }}
     }}
     </style>
     
