@@ -221,79 +221,158 @@ chat_prompt = ChatPromptTemplate.from_messages([
 # =========================
 
 # 페이지 설정을 메인 함수 밖으로 이동
+import streamlit as st
+from datetime import datetime
+
+# 페이지 설정
 st.set_page_config(
-        page_title=" ",  # 빈 문자열로 설정
-        layout="wide",
-        initial_sidebar_state="collapsed"
-    )
+    page_title="청렴법률 상담챗봇",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-
-# 3. 테마 설정 및 스타일 적용 (바로 실행되어야 함)
+# 테마 설정
 current_hour = datetime.now().hour
 is_dark_mode = current_hour < 6 or current_hour >= 18
 
 if is_dark_mode:
     bg_color = "#1a1a1a"
-    text_color = "#e0e0e0"
-    header_bg = "linear-gradient(135deg, #2d2d2d, #1a1a1a)"
-    chat_bg = "#2d2d2d"
+    text_color = "#ffffff"
+    header_bg = "#2d2d2d"
+    chat_bg = "#1a1a1a"
     user_msg_bg = "#4a4a4a"
-    assistant_msg_bg = "#333333"
+    assistant_msg_bg = "#2d2d2d"
     input_bg = "#2d2d2d"
-    header_color = "#60a5fa"
 else:
     bg_color = "#f5f6f7"
     text_color = "#1a1a1a"
-    header_bg = "linear-gradient(135deg, #ffffff, #f8f9fa)"
-    chat_bg = "#ffffff"
-    user_msg_bg = "#FEE500"
+    header_bg = "#ffffff"
+    chat_bg = "#f5f6f7"
+    user_msg_bg = "#007AFF"
     assistant_msg_bg = "#ffffff"
-    input_bg = "#f8f9fa"
-    header_color = "#1a73e8"
+    input_bg = "#ffffff"
 
-# CSS 스타일 수정
-st.markdown("""
+# CSS 스타일
+st.markdown(f"""
     <style>
-    /* Streamlit 기본 요소 숨기기 */
-    #MainMenu {visibility: hidden;}
-    header {display: none !important;}
-    footer {visibility: hidden;}
-    [data-testid="stToolbar"] {display: none !important;}
+    /* 기본 Streamlit 요소 숨기기 */
+    #MainMenu {{visibility: hidden;}}
+    header {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
+    [data-testid="stToolbar"] {{display: none !important;}}
     
-    /* 상단 헤더 */
-    .custom-header {
+    /* 전체 배경색 설정 */
+    .stApp {{
+        background-color: {bg_color};
+    }}
+    
+    /* 상단 헤더 스타일 */
+    .fixed-header {{
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
-        height: 40px;
-        background: #2d2d2d;
+        height: 60px;
+        background: {header_bg};
         display: flex;
         align-items: center;
         justify-content: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         z-index: 1000;
-    }
+    }}
     
-    /* 헤더 제목 */
-    .header-title {
-        font-size: 1.1rem;
-        color: #ffffff;
+    .header-title {{
+        font-size: 1.2rem;
+        color: {text_color};
+        font-weight: 500;
         display: flex;
         align-items: center;
         gap: 8px;
-    }
+    }}
     
-    /* 채팅 영역 조정 */
-    .stChatFloatingInputContainer {
-        margin-top: 40px !important;
-    }
+    /* 채팅 컨테이너 스타일 */
+    .stChatFloatingInputContainer {{
+        padding: 1rem;
+        background: {input_bg};
+        border-top: 1px solid rgba(0,0,0,0.1);
+    }}
     
-    .stChatMessageContainer {
-        padding-top: 40px !important;
-    }
+    /* 메시지 컨테이너 스타일 */
+    .stChatMessageContent {{
+        padding: 0.8rem 1rem;
+        border-radius: 12px;
+        max-width: 80%;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }}
+    
+    /* 사용자 메시지 스타일 */
+    [data-testid="StChatMessage"][data-testid="user"] {{
+        justify-content: flex-end;
+    }}
+    
+    [data-testid="StChatMessage"][data-testid="user"] .stChatMessageContent {{
+        background: {user_msg_bg};
+        color: #ffffff;
+        margin-left: auto;
+        border-bottom-right-radius: 4px;
+    }}
+    
+    /* 어시스턴트 메시지 스타일 */
+    [data-testid="StChatMessage"]:not([data-testid="user"]) .stChatMessageContent {{
+        background: {assistant_msg_bg};
+        color: {text_color};
+        border-bottom-left-radius: 4px;
+    }}
+    
+    /* 어시스턴트 아이콘 스타일 */
+    [data-testid="StChatMessage"]:not([data-testid="user"]) .stChatMessageAvatar {{
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23{text_color.replace("#", "")}" width="24" height="24"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.7L20 9v6l-8 4-8-4V9l8-4.3z"/></svg>');
+        background-size: 65%;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-color: transparent;
+    }}
+    
+    /* 사용자 아이콘 숨기기 */
+    [data-testid="StChatMessage"][data-testid="user"] .stChatMessageAvatar {{
+        display: none;
+    }}
+    
+    /* 채팅 입력창 스타일 */
+    .stChatInputContainer {{
+        padding: 0.5rem;
+        background: {input_bg};
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }}
+    
+    textarea {{
+        border: none !important;
+        background: transparent !important;
+    }}
+    
+    /* 스크롤바 스타일 */
+    ::-webkit-scrollbar {{
+        width: 6px;
+    }}
+    
+    ::-webkit-scrollbar-track {{
+        background: transparent;
+    }}
+    
+    ::-webkit-scrollbar-thumb {{
+        background: rgba(0,0,0,0.2);
+        border-radius: 3px;
+    }}
+    
+    /* 채팅 영역 여백 조정 */
+    .main .block-container {{
+        padding-top: 80px;
+        padding-bottom: 100px;
+    }}
     </style>
     
-    <div class="custom-header">
+    <div class="fixed-header">
         <div class="header-title">
             <span>⚖️</span>
             <span>청렴법률 상담챗봇</span>
