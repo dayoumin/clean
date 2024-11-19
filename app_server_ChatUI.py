@@ -181,7 +181,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
 
         """당신은 한국의 최고 법률 전문가입니다. 국립수산과학원의 근무자들을 위해, **청렴**(반부패, 윤리 등) 관련 법률 상담만을 제공합니다. 다음 지침을 반드시 준수하여 답변하세요:
 
-        1. **[중요]** 질문이 청렴, 복무 등과 관련된 질문**인 경우에만 아래 지침에 따라 답변하세요.
+        1. **[중요]** 질문이 청렴, 복무 등과 관련된 **법률적인 질문**인 경우에만 아래 지침에 따라 답변하세요.
 
         2. **[필수]** 답변은 자연스러운 문장으로 작성하며, 다음 내용을 포함하세요:
         - 질문에 대한 직접적인 답변
@@ -195,7 +195,10 @@ chat_prompt = ChatPromptTemplate.from_messages([
 
         4. **[법적 효력 우선순위]** 제공된 문서에 같은 내용이 여러 번 언급된 경우, 법적 효력에 따라 다음 순서로 우선순위를 두고 답변하세요:
         - **법률**
-        - **시행령**
+        - **대통령령**
+        - **부령**
+        - **훈령**
+        - **예규**
         - **업무편람 등 비법령 자료**
         - 여러 문서에서 관련 규정이 발견될 경우, 법적 효력이 높은 문서를 우선으로 인용하고, 필요 시 다른 자료는 보충 설명에 활용하세요.
 
@@ -205,12 +208,27 @@ chat_prompt = ChatPromptTemplate.from_messages([
 
         6. **[참고 법령 형식]** 결론과 '참고 법령' 목록 사이에 반드시 줄바꿈을 하세요.
 
-        7. **[질문 분류]** 질문이 청렴과 관련된 법률적인 질문이 아닌 경우, 다음과 같이 답변하세요:
-        - **청렴과 관련된 일반적인 질문인 경우**: "죄송하지만, 본 챗봇은 청렴 관련 법률 상담에만 답변드립니다."
-        - **인사말 등 small talk은 **답변하지만, 짧게 인사말만 하고 "본 챗봇은 청렴 관련 법률 상담에만 답변드립니다."라고 하세요.
-        - **청렴과 무관한 질문인 경우**: "죄송하지만, 본 챗봇은 청렴 관련 법률 상담을 위한 챗봇입니다."
+        7. **[질문 분류]** 인사말에는 간단히 응답하고, 질문이 청렴과 관련된 법률적인 질문이 아닌 경우, 다음과 같이 다양한 응답을 사용하세요:
+        - **청렴과 관련된 일반적인 질문인 경우**:
+        - "죄송하지만, 본 챗봇은 청렴 관련 법률 상담에만 답변드립니다."
+        - "해당 질문은 청렴 관련 법률 상담 범위를 벗어납니다."
+        - "죄송합니다, 청렴과 관련된 법률 상담에 대해서만 도와드릴 수 있습니다."
+        - **청렴과 무관한 질문인 경우**:
+        - "죄송하지만, 본 챗봇은 청렴 관련 법률 상담을 위한 챗봇입니다."
+        - "해당 주제는 청렴 관련 법률 상담과 관련이 없습니다."
+        - "죄송합니다, 청렴 관련 법률 상담 외의 질문에는 답변드리기 어렵습니다."
 
         8. **[출처 표기]** 모든 조항 인용 시 "「법률명」 제X조 제X항"과 같이 정확한 출처를 표시하세요.
+
+        9. **[예시 추가]** 청렴 관련 법률적인 질문과 그렇지 않은 질문의 예시를 추가하여 모델의 분류 정확도를 높이세요.
+        - **청렴 관련 예시**:
+        - "공직자가 금품을 수수하면 어떤 법률에 의해 처벌받나요?"
+        - "청렴성 강화를 위한 법적 제도는 무엇이 있나요?"
+        - **비청렴 관련 예시**:
+        - "수산 과학 연구에 필요한 장비는 어떻게 신청하나요?"
+        - "국립수산과학원 근무 시간은 어떻게 되나요?"
+
+        10. **[출처 표기]** 모든 조항 인용 시 "「법률명」 제X조 제X항"과 같이 정확한 출처를 표시하세요.
         
         """
     ),
@@ -222,210 +240,101 @@ chat_prompt = ChatPromptTemplate.from_messages([
 # =========================
 
 # 페이지 설정을 메인 함수 밖으로 이동
-import streamlit as st
-from datetime import datetime
-
-# 페이지 설정
 st.set_page_config(
-    page_title="",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+        page_title=" ",  # 빈 문자열로 설정
+        layout="wide",
+        initial_sidebar_state="collapsed"
+    )
 
-# 테마 설정
+
+# 3. 테마 설정 및 스타일 적용 (바로 실행되어야 함)
 current_hour = datetime.now().hour
 is_dark_mode = current_hour < 6 or current_hour >= 18
 
 if is_dark_mode:
     bg_color = "#1a1a1a"
-    text_color = "#ffffff"
-    header_bg = "#2d2d2d"
-    chat_bg = "#1a1a1a"
+    text_color = "#e0e0e0"
+    header_bg = "linear-gradient(135deg, #2d2d2d, #1a1a1a)"
+    chat_bg = "#2d2d2d"
     user_msg_bg = "#4a4a4a"
-    assistant_msg_bg = "#2d2d2d"
+    assistant_msg_bg = "#333333"
     input_bg = "#2d2d2d"
+    header_color = "#60a5fa"
 else:
     bg_color = "#f5f6f7"
     text_color = "#1a1a1a"
-    header_bg = "#ffffff"
-    chat_bg = "#f5f6f7"
-    user_msg_bg = "#007AFF"
+    header_bg = "linear-gradient(135deg, #ffffff, #f8f9fa)"
+    chat_bg = "#ffffff"
+    user_msg_bg = "#FEE500"
     assistant_msg_bg = "#ffffff"
-    input_bg = "#ffffff"
+    input_bg = "#f8f9fa"
+    header_color = "#1a73e8"
 
-# CSS 스타일
-st.markdown(f"""
+# CSS 스타일 수정
+# 기존 CSS 블록에 .main-container 클래스 추가
+st.markdown("""
     <style>
-    /* 기본 Streamlit 요소 숨기기 */
-    #MainMenu {{visibility: hidden;}}
-    header {{visibility: hidden;}}
-    footer {{visibility: hidden;}}
-    [data-testid="stToolbar"] {{display: none !important;}}
+    /* Streamlit 기본 요소 숨기기 */
+    #MainMenu {visibility: hidden;}
+    header {display: none !important;}
+    footer {visibility: hidden;}
+    [data-testid="stToolbar"] {display: none !important;}
     
-    /* 전체 배경색 설정 */
-    .stApp {{
-        background-color: {bg_color};
-        max-width: 100vw;
-        overflow-x: hidden;
-    }}
-    
-    /* 상단 헤더 스타일 */
-    .fixed-header {{
+    /* 상단 헤더 */
+    .custom-header {
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
-        height: 50px;
-        background: {header_bg};
+        height: 40px;
+        background: #2d2d2d;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         z-index: 1000;
-    }}
+    }
     
-    .header-title {{
-        font-size: 1rem;
-        color: {text_color};
-        font-weight: 500;
+    /* 헤더 제목 */
+    .header-title {
+        font-size: 1.1rem;
+        color: #ffffff;
         display: flex;
         align-items: center;
-        gap: 6px;
-    }}
+        gap: 8px;
+    }
     
-    /* 채팅 컨테이너 스타일 */
-    .stChatFloatingInputContainer {{
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        padding: 8px;
-        background: {input_bg};
-        border-top: 1px solid rgba(0,0,0,0.1);
-        z-index: 999;
-    }}
+    /* 채팅 영역 조정 */
+    .stChatFloatingInputContainer {
+        margin-top: 40px !important;
+    }
     
-    /* 메시지 컨테이너 스타일 */
-    .stChatMessageContent {{
-        padding: 10px 12px;
-        border-radius: 18px;
-        max-width: 85%;
-        margin: 4px 8px;
-        font-size: 0.95rem;
-        word-break: break-word;
-    }}
-    
-    /* 사용자 메시지 스타일 */
-    [data-testid="StChatMessage"][data-testid="user"] {{
-        justify-content: flex-end;
-        padding-left: 10%;
-    }}
-    
-    [data-testid="StChatMessage"][data-testid="user"] .stChatMessageContent {{
-        background: {user_msg_bg};
-        color: #ffffff;
-        margin-left: auto;
-        border-bottom-right-radius: 4px;
-    }}
-    
-    /* 어시스턴트 메시지 스타일 */
-    [data-testid="StChatMessage"]:not([data-testid="user"]) {{
-        padding-right: 10%;
-    }}
+    .stChatMessageContainer {
+        padding-top: 40px !important;
+    }
 
-    [data-testid="StChatMessage"]:not([data-testid="user"]) .stChatMessageContent {{
-        background: {assistant_msg_bg};
-        color: {text_color};
-        border-bottom-left-radius: 4px;
-        margin-right: auto;
-    }}
-    
-    /* 어시스턴트 아이콘 스타일 */
-    [data-testid="StChatMessage"]:not([data-testid="user"]) .stChatMessageAvatar {{
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666666"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>');
-        background-size: 65%;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-color: transparent;
-        width: 28px;
-        height: 28px;
-        margin-right: 6px;
-    }}
-    
-    /* 사용자 아이콘 숨기기 */
-    [data-testid="StChatMessage"][data-testid="user"] .stChatMessageAvatar {{
-        display: none;
-    }}
-    
-    /* 채팅 입력창 스타일 */
-    .stChatInputContainer {{
-        background: {input_bg};
-        border-radius: 20px;
-        margin: 0 8px;
-        padding: 6px 12px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }}
-    
-    textarea {{
-        border: none !important;
-        background: transparent !important;
-        padding: 8px !important;
-        font-size: 0.95rem !important;
-        line-height: 1.4 !important;
-        max-height: 100px !important;
-    }}
-    
-    /* 스크롤바 스타일 */
-    ::-webkit-scrollbar {{
-        width: 4px;
-    }}
-    
-    ::-webkit-scrollbar-track {{
-        background: transparent;
-    }}
-    
-    ::-webkit-scrollbar-thumb {{
-        background: rgba(0,0,0,0.2);
-        border-radius: 2px;
-    }}
-    
-    /* 채팅 영역 여백 조정 */
-    .main .block-container {{
-        padding-top: 60px;
-        padding-bottom: 80px;
-        padding-left: 0;
-        padding-right: 0;
-    }}
+    /* 좌우 여백 설정 */
+    .main-container {
+        padding-left: 50px;
+        padding-right: 50px;
+    }
 
-    /* 모바일 최적화 */
-    @media (max-width: 768px) {{
-        .stChatMessageContent {{
-            max-width: 90%;
-            font-size: 0.9rem;
-            padding: 8px 12px;
-        }}
-        
-        .header-title {{
-            font-size: 0.95rem;
-        }}
-        
-        .stChatInputContainer {{
-            margin: 0 4px;
-        }}
-        
-        textarea {{
-            font-size: 0.9rem !important;
-        }}
-    }}
+    /* 반응형 디자인 (옵션) */
+    @media (max-width: 768px) {
+        .main-container {
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+    }
     </style>
     
-    <div class="fixed-header">
+    <div class="custom-header">
         <div class="header-title">
             <span>⚖️</span>
             <span>청렴법률 상담챗봇</span>
         </div>
     </div>
 """, unsafe_allow_html=True)
+
 
 
 def main():
@@ -483,7 +392,14 @@ def main():
     # 메인 컨테이너 시작
     st.markdown('<div class="main-container">', unsafe_allow_html=True)
     
-    # 채팅 영역 시작
+    # 헤더 마크업 수정
+    st.markdown("""
+        <div class="header">
+            <h1 class="header-title">청렴법률 상담챗봇</h1>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # 채팅 영역
     st.markdown('<div class="chat-area">', unsafe_allow_html=True)
     
     # 메시지 표시
