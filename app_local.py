@@ -656,13 +656,21 @@ def main():
     with st.sidebar:
         st.header("📄 문서 관리")
         
-        # 리셋 버튼
+        # 리셋 버튼에 확인 팝업 추가
         if st.button("🔄 벡터스토어 초기화", help="청크 사이즈 변경 등을 위해 벡터스토어를 초기화합니다"):
-            if reset_vectorstore():
-                st.success("벡터스토어가 초기화되었습니다. 페이지를 새로고침하세요.")
-                st.info("새로운 설정으로 문서를 다시 업로드해주세요.")
-            else:
-                st.error("벡터스토어 초기화 중 오류가 발생했습니다.")
+            # 확인 팝업 표시
+            if st.warning("⚠️ 정말로 벡터스토어를 초기화하시겠습니까?"):
+                confirm = st.button("확인")
+                cancel = st.button("취소")
+                
+                if confirm:
+                    if reset_vectorstore():
+                        st.success("벡터스토어가 초기화되었습니다. 페이지를 새로고침하세요.")
+                        st.info("새로운 설정으로 문서를 다시 업로드해주세요.")
+                    else:
+                        st.error("벡터스토어 초기화 중 오류가 발생했습니다.")
+                elif cancel:
+                    st.info("초기화가 취소되었습니다.")
 
         # 구분선 추가
         st.markdown("---")
